@@ -15,8 +15,9 @@ ALGORITHM = "HS256"
 # Password Hashing
 # -------------------------
 def hash_password(password: str) -> str:
-    """Hash a plain password"""
+    password = password[:72]  # bcrypt limit
     return pwd_context.hash(password)
+    
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify a plain password against hashed value"""
