@@ -25,8 +25,8 @@ app = FastAPI(
 
 # CORS
 origins = [
-    "http://localhost:3000",
-    "https://rank-post-frontend.vercel.app",
+    "http://rankpost.net/",
+    "https://www.rankpost.net/",
 ]
 
 app.add_middleware(
