@@ -25,8 +25,9 @@ app = FastAPI(
 
 # CORS
 origins = [
-    "http://rankpost.net/",
-    "https://www.rankpost.net/",
+    "http://localhost:3000",
+    "https://rankpost.net",
+    "https://www.rankpost.net",
 ]
 
 app.add_middleware(
@@ -36,7 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Exception handler
 @app.exception_handler(Exception)
