@@ -24,11 +24,11 @@ app = FastAPI(
 )
 
 origins = [
-    "https://www.rankpost.net",
     "https://rankpost.net",
+    "https://www.rankpost.net",
     "https://rank-post-frontend.vercel.app",
-    "http://localhost:3000",
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
