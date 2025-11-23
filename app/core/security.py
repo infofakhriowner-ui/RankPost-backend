@@ -15,13 +15,11 @@ ALGORITHM = "HS256"
 # Password Hashing
 # -------------------------
 def hash_password(password: str) -> str:
-    password = password[:72]  # bcrypt limit safeguard
+    password = password.encode("utf-8")[:72].decode("utf-8", "ignore")
     return pwd_context.hash(password)
 
-    
-
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain password against hashed value"""
+    plain = plain.encode("utf-8")[:72].decode("utf-8", "ignore")
     return pwd_context.verify(plain, hashed)
 
 
