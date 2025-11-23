@@ -23,11 +23,11 @@ app = FastAPI(
     description="Backend for RankPost SaaS 🚀"
 )
 
-# CORS
 origins = [
-    "http://localhost:3000",
     "https://rankpost.net",
     "https://www.rankpost.net",
+    "http://localhost:3000",
+    "*",
 ]
 
 app.add_middleware(
