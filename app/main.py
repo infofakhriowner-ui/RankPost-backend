@@ -24,7 +24,10 @@ app = FastAPI(
 )
 
 # CORS
-origins = ["http://localhost:3000"]
+origins = [
+    "http://localhost:3000",
+    "https://rank-post-frontend.vercel.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +36,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Exception handler
 @app.exception_handler(Exception)
