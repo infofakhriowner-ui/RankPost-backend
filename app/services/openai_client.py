@@ -3,10 +3,10 @@
 import json
 import re
 import time
-from openai import OpenAI
+import openai
 from app.core.config import settings
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+openai.api_key = settings.OPENAI_API_KEY
 
 
 def style_guidelines(style: str) -> str:
@@ -64,14 +64,14 @@ def generate_article(keyword: str, style: str = "formal", retries: int = 2) -> d
 
     for attempt in range(retries):
         try:
-            resp = client.chat.completions.create(
+            resp = openai.ChatCompletion.create(
                 model=settings.OPENAI_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=4000,
             )
 
-            text = resp.choices[0].message.content
+            text = resp["choices"][0]["message"]["content"]
             cleaned = re.sub(r"[\x00-\x1F\x7F]", "", text).strip()
             first, last = cleaned.find("{"), cleaned.rfind("}")
             payload = cleaned[first:last + 1] if first != -1 and last > first else cleaned
@@ -91,12 +91,12 @@ def generate_image_b64(prompt: str, retries: int = 2) -> str | None:
     """
     for attempt in range(retries):
         try:
-            resp = client.images.generate(
-                model="gpt-image-1",
+            resp = openai.Image.create(
                 prompt=prompt,
                 size="1024x1024",
+                response_format="b64_json"
             )
-            return resp.data[0].b64_json
+            return resp["data"][0]["b64_json"]
         except Exception as e:
             print(f"[OpenAI Image Error] attempt {attempt + 1}: {e}")
             time.sleep(2)
