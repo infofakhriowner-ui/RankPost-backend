@@ -15,8 +15,9 @@ ALGORITHM = "HS256"
 # Password Hashing
 # -------------------------
 def hash_password(password: str) -> str:
-    password = password[:72]  # bcrypt limit
+    password = password[:72]  # bcrypt limit safeguard
     return pwd_context.hash(password)
+
     
 
 def verify_password(plain: str, hashed: str) -> bool:
