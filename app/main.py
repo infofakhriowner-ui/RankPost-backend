@@ -24,9 +24,11 @@ app = FastAPI(
 )
 
 origins = [
+    "http://localhost:3000",
+    "https://rankpost.vercel.app",
+    "https://www.rankpost.vercel.app",
     "https://rankpost.net",
-    "https://www.rankpost.net",
-    "https://rank-post-frontend.vercel.app",
+    "https://www.rankpost.net"
 ]
 
 
