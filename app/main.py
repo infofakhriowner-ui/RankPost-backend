@@ -34,11 +34,18 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # temporarily allow all domains
+    allow_origins=[
+        "http://localhost:3000",
+        "https://rankpost.vercel.app",
+        "https://www.rankpost.vercel.app",
+        "https://rankpost.net",
+        "https://www.rankpost.net"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 
