@@ -5,86 +5,103 @@ from app.models.site import WordPressSite
 from app.models.user import User
 from app.schemas.site import SiteCreate, SiteOut
 from app.routers.auth import get_current_user
-from app.services.crypto import encrypt_text  # ✅ Import encryption
-import requests  # ✅ For checking WordPress connection
+from app.services.crypto import encrypt_text
+import requests
 
 router = APIRouter()
 
 
-# -------------------------
-# Utility: Check WordPress credentials (strong validation)
-# -------------------------
+# ---------------------------------------------------
+# Utility: Validate WordPress Credentials
+# ---------------------------------------------------
 def check_wp_connection(url: str, user: str, app_password: str) -> bool:
     """
-    Validates WordPress connection before saving the site.
-    Ensures credentials and API access are actually working.
+    Check if WordPress credentials are valid.
     """
     try:
         wp_url = str(url).rstrip("/") + "/wp-json/wp/v2/posts"
+
         res = requests.get(wp_url, auth=(user, app_password), timeout=10)
 
         # Unauthorized → invalid credentials
         if res.status_code == 401:
             return False
 
-        # Redirects or non-OK status → invalid
+        # Any non-success except empty posts
         if res.status_code not in [200, 201]:
             return False
 
-        # Ensure response is valid JSON (not HTML)
+        # Should be valid JSON
         try:
             data = res.json()
-        except Exception:
+        except:
             return False
 
-        # ✅ Case 1: List of posts (normal WP response)
+        # Normal WordPress response (list of posts)
         if isinstance(data, list):
             if len(data) == 0:
-                # empty list = valid WP site with no posts yet
                 return True
-            elif isinstance(data[0], dict) and ("id" in data[0] or "title" in data[0]):
+            if isinstance(data[0], dict) and ("id" in data[0] or "title" in data[0]):
                 return True
 
-        # ✅ Case 2: Single post (dict)
+        # Single dictionary post
         if isinstance(data, dict) and ("id" in data or "title" in data):
             return True
 
-        # ❌ Anything else = probably HTML/error
         return False
 
     except Exception as e:
-        # Optional: print for debugging (safe to remove in production)
         print("WP check failed:", str(e))
         return False
 
 
-# -------------------------
-# GET list of sites for the logged-in user
-# -------------------------
+# ---------------------------------------------------
+# GET: List all sites for logged-in user
+# ---------------------------------------------------
 @router.get("/", response_model=list[SiteOut])
 def list_sites(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return db.query(WordPressSite).filter(WordPressSite.user_id == user.id).all()
 
 
-# -------------------------
-# POST add a new WordPress site (JSON body)
-# -------------------------
+# ---------------------------------------------------
+# GET: Single site detail (REQUIRED by frontend)
+# ---------------------------------------------------
+@router.get("/{site_id}", response_model=SiteOut)
+def get_site(site_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+
+    site = db.query(WordPressSite).filter(
+        WordPressSite.id == site_id,
+        WordPressSite.user_id == user.id
+    ).first()
+
+    if not site:
+        raise HTTPException(status_code=404, detail="Site not found")
+
+    return site
+
+
+# ---------------------------------------------------
+# POST: Add new site
+# ---------------------------------------------------
 @router.post("/add", response_model=SiteOut)
 def add_site(payload: SiteCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    # 🔹 Check if site already exists for this user
+
+    # Check duplicate
     exists = db.query(WordPressSite).filter(
         WordPressSite.user_id == user.id,
         WordPressSite.wp_url == str(payload.wp_url)
     ).first()
+
     if exists:
         raise HTTPException(status_code=400, detail="Site already added")
 
-    # 🔹 Validate WordPress credentials before saving
+    # Validate WP login
     is_valid = check_wp_connection(payload.wp_url, payload.wp_user, payload.wp_app_pass_enc)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid WordPress credentials or site not reachable.")
 
-    # ✅ Save password as encrypted text (no change to your logic)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid WordPress credentials or site unreachable.")
+
+    # Save encrypted password
     site = WordPressSite(
         user_id=user.id,
         wp_url=str(payload.wp_url).rstrip("/"),
@@ -97,14 +114,16 @@ def add_site(payload: SiteCreate, db: Session = Depends(get_db), user: User = De
     db.add(site)
     db.commit()
     db.refresh(site)
+
     return site
 
 
-# -------------------------
-# DELETE a WordPress site
-# -------------------------
+# ---------------------------------------------------
+# DELETE: Remove a site
+# ---------------------------------------------------
 @router.delete("/{site_id}")
 def delete_site(site_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+
     site = db.query(WordPressSite).filter(
         WordPressSite.id == site_id,
         WordPressSite.user_id == user.id
@@ -115,4 +134,5 @@ def delete_site(site_id: int, db: Session = Depends(get_db), user: User = Depend
 
     db.delete(site)
     db.commit()
+
     return {"message": "Site deleted successfully"}
