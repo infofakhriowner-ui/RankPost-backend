@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     OPENAI_IMAGE_MODEL: str = "gpt-image-1"
 
     # CORS settings (comma-separated string in .env)
-    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    CORS_ORIGINS=https://rankpost.net,https://www.rankpost.net,https://api.rankpost.net,http://localhost:3000
 
     # Database
     DATABASE_URL: str = "sqlite:///./rankpost.db"
